@@ -1,7 +1,19 @@
 /** Fixed public-data endpoint; never forwards client headers, cookies or holdings. */
-export default defineEventHandler(async (): Promise<unknown> => {
+export default defineEventHandler(async (event): Promise<unknown> => {
+  const { twseApiBaseUrl } = useRuntimeConfig(event)
+  let baseURL: string
   try {
-    return await $fetch<unknown>('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', {
+    const url = new URL(twseApiBaseUrl)
+    if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) {
+      throw new Error('Invalid API origin')
+    }
+    baseURL = url.origin
+  } catch {
+    throw createError({ statusCode: 503, statusMessage: 'Market data configuration unavailable', message: '行情服務設定尚未完成，請聯絡管理者。' })
+  }
+  try {
+    return await $fetch<unknown>('/v1/exchangeReport/STOCK_DAY_ALL', {
+      baseURL,
       timeout: 15000,
       retry: 0,
     })

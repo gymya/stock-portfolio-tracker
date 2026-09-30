@@ -8,6 +8,7 @@ Nuxt 4、Vue 3、TypeScript、Tailwind CSS、Nuxt UI 實作的台灣上市證券
 
 ```sh
 npm install
+cp .env.example .env
 npm run dev
 ```
 
@@ -57,3 +58,18 @@ PORT=3001 node .output/server/index.mjs
 ```
 
 圖示可用 `python3 scripts/generate-pwa-icons.py` 重新產生（不需要額外套件）。
+
+
+## 環境變數
+
+`NUXT_TWSE_API_BASE_URL` 為必要的伺服器端設定，範例值見 `.env.example`。值應為 HTTPS 網域（不含 API 路徑、帳密、query 或 hash）。應用程式使用私有 `runtimeConfig.twseApiBaseUrl` 讀取，不暴露給瀏覽器，程式碼沒有預設證交所網域。缺少或無效設定時 `/api/quotes` 回傳 503。
+
+本機開發：複製 `.env.example` 為 `.env`，重新啟動 Nuxt。`.env` 不納入 Git。
+
+Vercel：在 Project Settings → Environment Variables 新增 `NUXT_TWSE_API_BASE_URL`，值依 `.env.example` 設定，套用至需要的 Production / Preview 環境後重新部署。
+
+正式 Node 預覽不會自動載入 `.env`，請改用：
+
+```sh
+PORT=3001 node --env-file=.env .output/server/index.mjs
+```
