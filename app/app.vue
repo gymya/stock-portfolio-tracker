@@ -5,6 +5,7 @@ onMounted(() => { void initialize(); void refresh() })
 </script>
 <template>
   <UApp>
+    <VitePwaManifest />
     <div class="app-shell">
       <header class="topbar">
         <NuxtLink to="/portfolio" class="brand"><span class="brand-mark">台</span><span>台股手帳<small>臺灣上市證券</small></span></NuxtLink>
@@ -13,6 +14,7 @@ onMounted(() => { void initialize(); void refresh() })
       </header>
       <main>
         <UAlert v-if="storageError" color="warning" variant="soft" title="瀏覽器儲存提醒" :description="storageError" class="mb-6" />
+        <PwaStatus />
         <NuxtPage />
       </main>
       <footer><span>台股手帳 <span class="footer-separator">/</span> 讓每一股，都清楚。</span><span>資料來源：臺灣證券交易所 · 非即時行情</span></footer>

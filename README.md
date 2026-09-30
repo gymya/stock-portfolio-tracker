@@ -42,3 +42,18 @@ TWSE → Nuxt `/api/quotes` 公開行情代理 → adapter → StockQuote[] → 
 持股只在目前瀏覽器；不同分頁不即時同步。股數接受有限正數，包括小數。不支援上櫃、即時行情、成本、總報酬、交易歷史、帳號或資料庫。
 
 測試涵蓋日期轉換、數值正規化、計算、缺值、溢位、日期不一致、損毀儲存與存取失敗。
+
+## PWA
+
+正式建置包含 Web App Manifest、Service Worker、192/512px 安裝圖示及 180px Apple touch icon，主色為 #08192D。以 HTTPS 部署（本機 localhost 亦可）後，在支援的瀏覽器使用「安裝台股手帳」或瀏覽器的安裝功能；iPhone/iPad 可用 Safari 分享選單的「加入主畫面」。
+
+第一次連線成功並完成 Service Worker 資源下載後，可離線開啟兩個頁面、查看與修改既有持股。行情 API 採 NetworkOnly，不快取行情；離線重新開啟時沒有價格，顯示讀取失敗及「—」，不會以假資料補值。新增股票仍需連線驗證代碼。PWA 不會增加持股同步或伺服器儲存。
+
+新版本下載完成後會顯示更新按鈕，由使用者確認重新載入，避免中斷輸入。開發模式不啟用 Service Worker，請使用正式建置驗證：
+
+```sh
+npm run build
+PORT=3001 node .output/server/index.mjs
+```
+
+圖示可用 `python3 scripts/generate-pwa-icons.py` 重新產生（不需要額外套件）。
