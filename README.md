@@ -62,7 +62,7 @@ PORT=3001 node .output/server/index.mjs
 
 ## 環境變數
 
-`NUXT_TWSE_API_BASE_URL` 為必要的伺服器端設定，範例值見 `.env.example`。值應為 HTTPS 網域（不含 API 路徑、帳密、query 或 hash）。應用程式使用私有 `runtimeConfig.twseApiBaseUrl` 讀取，不暴露給瀏覽器，程式碼沒有預設證交所網域。缺少或無效設定時 `/api/quotes` 回傳 503。
+`NUXT_TWSE_API_BASE_URL` 為必要的伺服器端設定，範例值見 `.env.example`。值固定為包含 `/v1` 的 HTTPS 基底 URL，不可包含帳密、query 或 hash。應用程式使用私有 `runtimeConfig.twseApiBaseUrl` 讀取，不暴露給瀏覽器；endpoint `/exchangeReport/STOCK_DAY_ALL` 由伺服器路由組合。缺少或無效設定時 `/api/quotes` 回傳 503。
 
 本機開發：複製 `.env.example` 為 `.env`，重新啟動 Nuxt。`.env` 不納入 Git。
 
