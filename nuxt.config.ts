@@ -2,7 +2,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: false,
   runtimeConfig: {
-    twseApiBaseUrl: '', // Server-only; supplied by NUXT_TWSE_API_BASE_URL.
+    fugleApiBaseUrl: '', // NUXT_FUGLE_API_BASE_URL, server-only
+    fugleApiKey: '', // NUXT_FUGLE_API_KEY, never exposed to the browser
   },
   colorMode: { preference: 'light' },
   modules: ['@nuxt/ui', '@vite-pwa/nuxt'],

@@ -5,6 +5,7 @@ export interface HoldingValuation {
   quote: StockQuote | null
   marketValue: number | null
   dailyPnL: number | null
+  dailyChangePercentage: number | null
 }
 export interface PortfolioSummary {
   holdings: HoldingValuation[]

@@ -24,9 +24,13 @@ npm run build
 
 ## 資料流程
 
-TWSE → Nuxt `/api/quotes` 公開行情代理 → adapter → StockQuote[] → 純函式計算 → 共用 composables → Vue 頁面。
+Fugle 個股即時報價 → Nuxt `/api/quotes?symbols=2330,0050` → adapter → StockQuote[] → 純函式計算 → 共用 composables → Vue 頁面。
 
-`useStockQuotes` 共用單一進行中的請求，行情在記憶體快取五分鐘，使用者可手動更新。失敗會保留上次成功資料並顯示警告。不自動輪詢、不存行情至 localStorage。
+`useStockQuotes` 共用單一進行中的請求，只查持股代碼，每 60 秒更新；背景分頁或離線時暫停自動查詢，回到前景或恢復連線時更新。使用者可手動更新。伺服器按代碼快取 60 秒並共用進行中請求，手動更新仍可能命中快取。快取僅限各執行個體記憶體，Vercel 不同實例不共用。失敗保留上次成功資料並顯示警告，不存行情至 localStorage。
+
+使用 Fugle `/intraday/quote/{symbol}`，適用個股報價權限；不使用需較高方案的全市場 snapshot。每輪每檔最多一次上游請求，請依帳號額度控制持股數。API Key、方案錯誤與額度耗盡會顯示提示，不自動重試該次請求。正式網頁應搭配 Vercel 存取保護，避免公開訪客耗用你的個人 API 配額。
+
+採用 `lastTrade.price`，缺少時使用 `closePrice`，不使用包含試撮的 `lastPrice` 或 `change`。損益自行計算為 `(實際成交價 - previousClose) × 股數`。Fugle 微秒時間轉為 ISO，畫面以臺北時間顯示。`StockQuote.close` 為相容既有計算介面的估值價格，盤中代表最近實際成交價，並非僅代表收盤價。
 
 `portfolioLocal` 是唯一存取 localStorage 的位置，key 為 `tw-portfolio:v1`，只儲存 `{ symbol, shares }[]`。初始讀取失敗會鎖定寫入，避免覆寫損毀資料。儲存不可用時仍可在記憶體操作，畫面會提醒重新整理可能遺失變更。
 
@@ -36,11 +40,11 @@ TWSE → Nuxt `/api/quotes` 公開行情代理 → adapter → StockQuote[] → 
 
 ## 目前限制
 
-官方 STOCK_DAY_ALL 回應未提供 Access-Control-Allow-Origin，因此瀏覽器透過同源 GET `/api/quotes` 取得行情。代理只請求固定的官方網址，不轉送瀏覽器 cookies、headers、查詢參數或持股；15 秒逾時後回傳 502，前端保留既有行情並提示重試。不新增伺服器儲存或快取，沿用五分鐘前端快取。沒有使用非官方行情或示範價格替代真實資料。
+瀏覽器僅傳送查詢股票代碼至同源代理，持有股數不離開瀏覽器。伺服器以 `X-API-KEY` 呼叫固定的 Fugle 網址，不轉送瀏覽器 cookies 或其他 headers。單檔 12 秒逾時，任一檔失敗時該輪更新失敗並保留舊行情。未提供 Key 時無法驗證真實行情，沒有以示範資料替代正式行情。
 
 部署必須執行 Nuxt server（`npm run build` 後執行 `node .output/server/index.mjs`）或支援 Nitro 的平台。純靜態部署無法提供此代理。
 
-持股只在目前瀏覽器；不同分頁不即時同步。股數接受有限正數，包括小數。不支援上櫃、即時行情、成本、總報酬、交易歷史、帳號或資料庫。
+持股只在目前瀏覽器；不同分頁不即時同步。股數接受有限正數，包括小數。不支援上櫃、成本、總報酬、交易歷史、帳號或資料庫。這是每分鐘抓取即時報價的 REST 輪詢，不是逐筆 WebSocket 串流；資料時效依 Fugle 方案及個股最後成交時間而定。
 
 測試涵蓋日期轉換、數值正規化、計算、缺值、溢位、日期不一致、損毀儲存與存取失敗。
 
@@ -62,11 +66,11 @@ PORT=3001 node .output/server/index.mjs
 
 ## 環境變數
 
-`NUXT_TWSE_API_BASE_URL` 為必要的伺服器端設定，範例值見 `.env.example`。值固定為包含 `/v1` 的 HTTPS 基底 URL，不可包含帳密、query 或 hash。應用程式使用私有 `runtimeConfig.twseApiBaseUrl` 讀取，不暴露給瀏覽器；endpoint `/exchangeReport/STOCK_DAY_ALL` 由伺服器路由組合。缺少或無效設定時 `/api/quotes` 回傳 503。
+必要設定：`NUXT_FUGLE_API_BASE_URL=https://api.fugle.tw/marketdata/v1.0/stock` 及 `NUXT_FUGLE_API_KEY`。兩者皆使用私有 runtimeConfig；Key 不可使用 `NUXT_PUBLIC_` 前綴。缺少設定回傳 503，舊的 `NUXT_TWSE_API_BASE_URL` 不再使用。
 
 本機開發：複製 `.env.example` 為 `.env`，重新啟動 Nuxt。`.env` 不納入 Git。
 
-Vercel：在 Project Settings → Environment Variables 新增 `NUXT_TWSE_API_BASE_URL`，值依 `.env.example` 設定，套用至需要的 Production / Preview 環境後重新部署。
+Vercel：在 Project Settings → Environment Variables 新增 `NUXT_FUGLE_API_BASE_URL` 與 `NUXT_FUGLE_API_KEY`，套用至需要的 Production / Preview 環境後重新部署。
 
 正式 Node 預覽不會自動載入 `.env`，請改用：
 

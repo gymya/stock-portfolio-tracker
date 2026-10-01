@@ -6,7 +6,7 @@ export function usePortfolio() {
   const holdings = useState<Holding[]>('holdings', () => [])
   const initialized = useState('portfolio-initialized', () => false)
   const storageError = useState<string | null>('storage-error', () => null)
-  const { quotes } = useStockQuotes()
+  const { quotes, lookup } = useStockQuotes()
   const summary = computed(() => calculatePortfolio(holdings.value, quotes.value))
   async function initialize() {
     if (initialized.value) return
@@ -24,8 +24,8 @@ export function usePortfolio() {
     if (!/^[A-Z0-9]{4,10}$/.test(symbol)) throw new Error('請輸入有效的股票代碼。')
     if (!Number.isFinite(shares) || shares <= 0) throw new Error('股數必須為大於 0 的數字。')
     if (holdings.value.some(h => h.symbol === symbol)) throw new Error('已加入此股票，請在持股清單修改股數。')
-    if (!quotes.value.length) throw new Error('請先成功載入行情，再新增持股。')
-    if (!quotes.value.some(q => q.symbol === symbol)) throw new Error('找不到此代碼，請確認為證交所上市證券；暫不支援上櫃股票。')
+    await lookup(symbol)
+    if (holdings.value.some(h => h.symbol === symbol)) throw new Error('已加入此股票，請在持股清單修改股數。')
     await persist([...holdings.value, { symbol, shares }])
   }
   async function update(symbol: string, shares: number) {

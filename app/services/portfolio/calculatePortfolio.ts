@@ -8,7 +8,8 @@ export function calculatePortfolio(holdings: Holding[], quotes: StockQuote[]): P
     const validShares = Number.isFinite(holding.shares) && holding.shares > 0
     const value = validShares && quote && finite(quote.close) && quote.close > 0 ? holding.shares * quote.close : null
     const pnl = value !== null && quote && finite(quote.change) && finite(quote.previousClose) && quote.previousClose > 0 ? holding.shares * quote.change : null
-    return { holding, quote, marketValue: finite(value) ? value : null, dailyPnL: finite(pnl) ? pnl : null }
+    const percent = finite(pnl) && quote && finite(quote.change) && finite(quote.previousClose) && quote.previousClose > 0 ? quote.change / quote.previousClose * 100 : null
+    return { holding, quote, marketValue: finite(value) ? value : null, dailyPnL: finite(pnl) ? pnl : null, dailyChangePercentage: finite(percent) ? percent : null }
   })
   const dates = new Set(rows.flatMap(row => row.quote ? [row.quote.date] : []))
   const sameDate = dates.size <= 1
