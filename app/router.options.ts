@@ -1,4 +1,4 @@
-import type { RouterConfig } from '@nuxt/schema'
+import type { RouterConfig } from "@nuxt/schema";
 export default {
-  routes: routes => [{ path: '/', redirect: '/portfolio' }, ...routes],
-} satisfies RouterConfig
+  routes: (routes) => [{ path: "/", redirect: "/portfolio" }, ...routes],
+} satisfies RouterConfig;

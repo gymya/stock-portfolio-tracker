@@ -65,7 +65,6 @@ PORT=3001 node .output/server/index.mjs
 
 頁首、PWA 與 Apple 主畫面統一使用 `public/icons/notebook-full-*.png` 記事本圖示，藏青底延伸至圖片邊緣，沒有外圍白邊。Manifest 使用 `any`，由作業系統處理外框；頁首圓角由 CSS 呈現。`scripts/generate-pwa-icons.py` 是舊版「台」字圖示產生器，不適用目前圖示。
 
-
 ## 環境變數
 
 必要設定：`NUXT_FUGLE_API_BASE_URL=https://api.fugle.tw/marketdata/v1.0/stock` 及 `NUXT_FUGLE_API_KEY`。兩者皆使用私有 runtimeConfig；Key 不可使用 `NUXT_PUBLIC_` 前綴。缺少設定回傳 503，舊的 `NUXT_TWSE_API_BASE_URL` 不再使用。
