@@ -1,20 +1,10 @@
 <script setup lang="ts">
 const { initialize, storageError, holdings, initialized } = usePortfolio()
 const { refresh } = useStockQuotes()
-let quoteTimer: ReturnType<typeof setInterval> | undefined
-function refreshVisible() { if (!document.hidden && navigator.onLine) void refresh() }
-watch(() => holdings.value.map(h => h.symbol).sort().join(','), () => { if (initialized.value) refreshVisible() })
+watch(() => holdings.value.map(h => h.symbol).sort().join(','), () => { if (initialized.value) void refresh() })
 onMounted(async () => {
-  quoteTimer = setInterval(refreshVisible, 60000)
-  document.addEventListener('visibilitychange', refreshVisible)
-  window.addEventListener('online', refreshVisible)
   await initialize()
   await refresh()
-})
-onBeforeUnmount(() => {
-  clearInterval(quoteTimer)
-  document.removeEventListener('visibilitychange', refreshVisible)
-  window.removeEventListener('online', refreshVisible)
 })
 </script>
 <template>
@@ -31,7 +21,7 @@ onBeforeUnmount(() => {
         <PwaStatus />
         <NuxtPage />
       </main>
-      <footer><span>台股手帳 <span class="footer-separator">/</span> 讓每一股，都清楚。</span><span>資料來源：Fugle · 每分鐘更新成交行情</span></footer>
+      <footer><span>台股手帳 <span class="footer-separator">/</span> 讓每一股，都清楚。</span><span>資料來源：Fugle · 成交行情</span></footer>
     </div>
   </UApp>
 </template>
