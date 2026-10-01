@@ -28,6 +28,8 @@ Fugle 個股即時報價 → Nuxt `/api/quotes?symbols=2330,0050` → adapter �
 
 `useStockQuotes` 共用單一進行中的請求，只查持股代碼，於首次載入、持股代碼變更或使用者手動更新時查詢，沒有定時更新。伺服器按代碼快取 60 秒並共用進行中請求，手動更新仍可能命中快取。快取僅限各執行個體記憶體，Vercel 不同實例不共用。失敗保留上次成功資料並顯示警告，不存行情至 localStorage。
 
+新增持股支援代碼及股票簡稱的部分搜尋。`/api/stocks` 使用 Fugle `/intraday/tickers?type=EQUITY&exchange=TWSE` 取得上市股票與 ETF 清單，未排除注意、處置或暫停交易股票。進入管理持股頁時載入，依取得時間快取 24 小時；伺服器記憶體與瀏覽器 localStorage 都保留清單，搜尋不呼叫行情 API。更新失敗時沿用瀏覽器舊清單，無清單時仍可輸入代碼；新增持股仍透過報價驗證。清單快取不含 API Key 或使用者持股。
+
 使用 Fugle `/intraday/quote/{symbol}`，適用個股報價權限；不使用需較高方案的全市場 snapshot。每輪每檔最多一次上游請求，請依帳號額度控制持股數。API Key、方案錯誤與額度耗盡會顯示提示，不自動重試該次請求。正式網頁應搭配 Vercel 存取保護，避免公開訪客耗用你的個人 API 配額。
 
 採用 `lastTrade.price`，缺少時使用 `closePrice`，不使用包含試撮的 `lastPrice` 或 `change`。損益自行計算為 `(實際成交價 - previousClose) × 股數`。Fugle 微秒時間轉為 ISO，畫面以臺北時間顯示。`StockQuote.close` 為相容既有計算介面的估值價格，盤中代表最近實際成交價，並非僅代表收盤價。
