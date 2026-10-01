@@ -23,10 +23,13 @@ export function usePortfolio() {
     const symbol = symbolInput.replace(/\s/g, '').toUpperCase()
     if (!/^[A-Z0-9]{4,10}$/.test(symbol)) throw new Error('請輸入有效的股票代碼。')
     if (!Number.isFinite(shares) || shares <= 0) throw new Error('股數必須為大於 0 的數字。')
-    if (holdings.value.some(h => h.symbol === symbol)) throw new Error('已加入此股票，請在持股清單修改股數。')
     await lookup(symbol)
-    if (holdings.value.some(h => h.symbol === symbol)) throw new Error('已加入此股票，請在持股清單修改股數。')
-    await persist([...holdings.value, { symbol, shares }])
+    const existing = holdings.value.find(h => h.symbol === symbol)
+    const total = (existing?.shares ?? 0) + shares
+    if (!Number.isFinite(total)) throw new Error('合計股數過大，請調整輸入數量。')
+    await persist(existing
+      ? holdings.value.map(h => h.symbol === symbol ? { ...h, shares: total } : h)
+      : [...holdings.value, { symbol, shares }])
   }
   async function update(symbol: string, shares: number) {
     if (!Number.isFinite(shares) || shares <= 0) throw new Error('股數必須為大於 0 的數字。')
