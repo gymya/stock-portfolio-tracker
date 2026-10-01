@@ -8,7 +8,7 @@ onMounted(() => { void initialize(); void refresh() })
     <VitePwaManifest />
     <div class="app-shell">
       <header class="topbar">
-        <NuxtLink to="/portfolio" class="brand"><span class="brand-mark">台</span><span>台股手帳<small>臺灣上市證券</small></span></NuxtLink>
+        <NuxtLink to="/portfolio" class="brand"><img class="brand-mark" src="/icons/notebook-full-192.png" alt="" width="39" height="39"><span>台股手帳<small>臺灣上市證券</small></span></NuxtLink>
         <nav aria-label="主要導覽"><NuxtLink to="/portfolio">投資組合</NuxtLink><NuxtLink to="/holdings">管理持股</NuxtLink></nav>
         <span class="local-label"><span class="dot" /> 本機儲存</span>
       </header>

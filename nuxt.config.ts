@@ -21,9 +21,8 @@ export default defineNuxtConfig({
       theme_color: '#08192D',
       background_color: '#f7f8fa',
       icons: [
-        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        { src: '/icons/notebook-full-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icons/notebook-full-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
       ],
     },
     includeAssets: ['icons/*.png'],
@@ -37,6 +36,20 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/main.css'],
-  app: { head: { htmlAttrs: { lang: 'zh-Hant' }, title: '台股手帳｜投資組合', link: [{ rel: 'apple-touch-icon', href: '/icons/icon-180.png' }], meta: [{ name: 'theme-color', content: '#08192D' }, { name: 'apple-mobile-web-app-title', content: '台股手帳' }, { name: 'description', content: '保存在瀏覽器中的台股持股與最新交易日市值。' }] } },
+  app: {
+    head: {
+      htmlAttrs: { lang: 'zh-Hant' },
+      title: '台股手帳｜投資組合',
+      link: [
+        { rel: 'apple-touch-icon', href: '/icons/notebook-full-180.png' },
+        { rel: 'icon', type: 'image/png', href: '/icons/notebook-full-192.png' },
+      ],
+      meta: [
+        { name: 'theme-color', content: '#08192D' },
+        { name: 'apple-mobile-web-app-title', content: '台股手帳' },
+        { name: 'description', content: '保存在瀏覽器中的台股持股與最新交易日市值。' },
+      ],
+    },
+  },
   typescript: { strict: true },
-})
+});

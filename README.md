@@ -57,7 +57,7 @@ npm run build
 PORT=3001 node .output/server/index.mjs
 ```
 
-圖示可用 `python3 scripts/generate-pwa-icons.py` 重新產生（不需要額外套件）。
+頁首、PWA 與 Apple 主畫面統一使用 `public/icons/notebook-full-*.png` 記事本圖示，藏青底延伸至圖片邊緣，沒有外圍白邊。Manifest 使用 `any`，由作業系統處理外框；頁首圓角由 CSS 呈現。`scripts/generate-pwa-icons.py` 是舊版「台」字圖示產生器，不適用目前圖示。
 
 
 ## 環境變數

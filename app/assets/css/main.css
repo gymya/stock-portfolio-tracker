@@ -44,7 +44,7 @@ body { margin: 0; background: #f7f8fa; color: #1e3047; font-family: var(--font-s
 .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .topbar { height: 92px; padding: 0 max(6vw, 24px); background: white; border-bottom: 1px solid #e1e7ef; display: flex; align-items: center; gap: 65px; }
 .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 650; letter-spacing: 1px; }
-.brand-mark { width: 39px; height: 39px; background: #08192D; color: white; display: grid; place-items: center; border-radius: 11px; font-size: 22px; }
+.brand-mark { width: 39px; height: 39px; display: block; object-fit: contain; flex-shrink: 0; border-radius: 9px; }
 .brand small { display: block; font-size: 8px; letter-spacing: 2px; color: #708096; margin-top: 3px; }
 nav { height: 100%; display: flex; gap: 32px; } nav a { display: grid; align-items: center; color: #66788f; border-bottom: 3px solid transparent; padding-top: 3px; } nav a.router-link-active { color: #08192D; border-color: #08192D; font-weight: 600; }
 .local-label { margin-left: auto; color: #738399; font-size: 12px; display: flex; align-items: center; gap: 8px; }.dot { width: 6px; height: 6px; display: inline-block; border-radius: 50%; background: #345779; }.dot.muted { background: #a7b2c0; }
