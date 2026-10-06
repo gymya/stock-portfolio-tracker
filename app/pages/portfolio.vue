@@ -71,9 +71,9 @@ const marketTime = computed(() => {
       </div>
       <div class="change-card">
         <p class="metric-label">{{ deductFees ? '扣費後持股報酬' : '持股報酬' }}</p>
-        <p class="change-value" :class="direction(summary.unrealizedPnL)">{{ signedMoney(summary.unrealizedPnL) }}</p>
+        <p class="change-value" :class="direction(summary.unrealizedPnL)">{{ signedMoney(summary.unrealizedPnL, 0) }}</p>
         <span class="change-pill" :class="direction(summary.returnPercentage)">{{ percentage(summary.returnPercentage) }}</span>
-        <p class="metric-note">總購買成本 NT$ {{ money(summary.costBasis) }} · 依成本加權</p>
+        <p class="metric-note">總購買成本 NT$ {{ money(summary.costBasis, 0) }} · 依成本加權</p>
       </div>
     </div>
     <UAlert v-if="holdings.some(h => h.averageCost === undefined)" class="mb-6" color="warning" variant="soft" title="部分持股尚未設定均價" description="請至管理持股補上購買均價；補齊前，缺少成本的個股及整體報酬率以「—」顯示。" />
@@ -143,7 +143,7 @@ const marketTime = computed(() => {
               <td class="numeric" data-label="交易日損益 %" :class="direction(row.dailyChangePercentage)">
                 {{ percentage(row.dailyChangePercentage) }}
               </td>
-              <td class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL) }}</td>
+              <td class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL, 0) }}</td>
               <td class="numeric" :data-label="deductFees ? '扣費後報酬率' : '持股報酬率'" :class="direction(row.returnPercentage)">{{ percentage(row.returnPercentage) }}</td>
             </tr>
           </tbody>
