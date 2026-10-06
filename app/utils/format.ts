@@ -1,13 +1,13 @@
-export const money = (value: number | null) =>
+export const money = (value: number | null, maximumFractionDigits = 2) =>
   value === null
     ? "—"
-    : new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 2 }).format(
+    : new Intl.NumberFormat("zh-TW", { maximumFractionDigits }).format(
         value,
       );
-export const signedMoney = (value: number | null) =>
+export const signedMoney = (value: number | null, maximumFractionDigits = 2) =>
   value === null
     ? "—"
-    : `${value > 0 ? "+" : value < 0 ? "−" : ""}NT$ ${money(Math.abs(value))}`;
+    : `${value > 0 ? "+" : value < 0 ? "−" : ""}NT$ ${money(Math.abs(value), maximumFractionDigits)}`;
 export const percentage = (value: number | null) =>
   value === null ? "—" : `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 export const direction = (value: number | null) =>
