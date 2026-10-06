@@ -6,7 +6,12 @@ import {
   direction,
   quoteTime,
 } from "~/utils/format";
-const { holdings, summary } = usePortfolio();
+import { deductSellingFees } from '~/services/portfolio/sellingFees';
+const { holdings, summary: originalSummary } = usePortfolio();
+const deductFees = ref(false);
+const summary = computed(() => deductFees.value
+  ? deductSellingFees(originalSummary.value, new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10))
+  : originalSummary.value);
 const { quotes, loading, refresh, error } = useStockQuotes();
 const marketTime = computed(() => {
   const latest = quotes.value
@@ -37,9 +42,14 @@ const marketTime = computed(() => {
       <strong>{{ marketTime ?? "尚未取得" }}</strong
       ><span class="caption-divider" />Fugle 成交行情
     </div>
+    <div class="mb-5">
+      <UCheckbox v-model="deductFees" label="扣除預估稅費（假設全部賣出）" />
+      <p class="mt-2 text-xs text-muted leading-relaxed">手續費 0.1425%（每檔最低 NT$20），證交稅依證券類型計算。僅供估算，以券商交割明細為準。</p>
+      <p v-if="deductFees" class="mt-1 text-xs text-muted">損益扣除本次賣出稅費，不含買進費用。</p>
+    </div>
     <div class="summary-grid">
       <div class="value-card">
-        <p class="metric-label">持股總市值</p>
+        <p class="metric-label">{{ deductFees ? '預估賣出淨額' : '持股總市值' }}</p>
         <div class="portfolio-value">
           <span>NT$</span> {{ money(summary.marketValue) }}
         </div>
@@ -48,7 +58,7 @@ const marketTime = computed(() => {
         </p>
       </div>
       <div class="change-card">
-        <p class="metric-label">最新交易日損益</p>
+        <p class="metric-label">{{ deductFees ? '預估扣費後損益' : '最新交易日損益' }}</p>
         <p class="change-value" :class="direction(summary.dailyPnL)">
           {{ signedMoney(summary.dailyPnL) }}
         </p>
@@ -66,7 +76,7 @@ const marketTime = computed(() => {
       color="warning"
       variant="soft"
       title="部分行情無法計算"
-      description="持股可能缺少價格、漲跌資料或交易日期不一致。無法完整計算的總額以「—」顯示。"
+      description="持股可能缺少價格、漲跌資料、交易日期不一致，或無法確認適用稅率。無法完整計算的總額以「—」顯示。"
     />
     <section class="panel">
       <div class="panel-heading">
@@ -87,9 +97,9 @@ const marketTime = computed(() => {
               <th>股票</th>
               <th class="numeric">持有股數</th>
               <th class="numeric">最近成交價</th>
-              <th class="numeric">市值</th>
-              <th class="numeric">交易日損益</th>
-              <th class="numeric">損益 %</th>
+              <th class="numeric">{{ deductFees ? '預估賣出淨額' : '市值' }}</th>
+              <th class="numeric">{{ deductFees ? '扣費後損益' : '交易日損益' }}</th>
+              <th class="numeric">{{ deductFees ? '扣費後損益 %' : '損益 %' }}</th>
             </tr>
           </thead>
           <tbody>

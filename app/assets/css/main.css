@@ -32,6 +32,12 @@
   --ui-border: #d5deea;
   --ui-border-accented: #a7b8cf;
 }
+::selection {
+  background-color: #bdcfe3;
+  color: #08192d;
+  -webkit-text-fill-color: #08192d;
+  text-shadow: none;
+}
 input,
 textarea,
 select {
