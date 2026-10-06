@@ -12,11 +12,12 @@ export function validateHoldings(value: unknown): Holding[] {
       typeof row.shares !== "number" ||
       !Number.isFinite(row.shares) ||
       row.shares <= 0 ||
+      (row.averageCost !== undefined && (typeof row.averageCost !== "number" || !Number.isFinite(row.averageCost) || row.averageCost <= 0 || !Number.isFinite(row.averageCost * row.shares))) ||
       symbols.has(row.symbol)
     )
       throw new Error("持股資料損毀");
     symbols.add(row.symbol);
-    return { symbol: row.symbol, shares: row.shares };
+    return { symbol: row.symbol, shares: row.shares, ...(row.averageCost === undefined ? {} : { averageCost: row.averageCost }) };
   });
 }
 export function createPortfolioLocal(

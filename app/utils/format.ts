@@ -21,3 +21,5 @@ export const quoteTime = (value?: string | null) =>
         minute: "2-digit",
         hourCycle: "h23",
       }).format(new Date(value));
+
+export const averagePrice = (value?: number) => value === undefined ? "尚未設定均價" : new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 4 }).format(value);

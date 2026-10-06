@@ -44,10 +44,11 @@ onBeforeUnmount(() => {
       role="status"
     >
       <p>有新版本可用，請先完成目前的輸入。</p>
-      <UButton @click="$pwa.updateServiceWorker(true)">更新並重新載入</UButton>
+      <UButton class="ml-auto" @click="$pwa.updateServiceWorker(true)">更新並重新載入</UButton>
     </div>
     <UButton
       v-if="$pwa?.showInstallPrompt"
+      class="flex w-fit ml-auto"
       color="primary"
       variant="outline"
       @click="$pwa.install()"

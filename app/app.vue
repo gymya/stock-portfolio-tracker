@@ -20,6 +20,7 @@ onMounted(async () => {
   <UApp>
     <VitePwaManifest />
     <div class="app-shell">
+      <a class="skip-link" href="#main-content">跳至主要內容</a>
       <header class="topbar">
         <NuxtLink to="/portfolio" class="brand"
           ><img
@@ -36,7 +37,7 @@ onMounted(async () => {
         </nav>
         <span class="local-label"><span class="dot" /> 本機儲存</span>
       </header>
-      <main>
+      <main id="main-content" tabindex="-1">
         <UAlert
           v-if="storageError"
           color="warning"
