@@ -26,7 +26,6 @@ const marketTime = computed(() => {
     <div class="page-heading">
       <div>
         <h1>投資組合總覽</h1>
-        <p class="subtitle">市值、交易日損益與持股報酬，一目了然。</p>
       </div>
       <UButton
         color="neutral"
