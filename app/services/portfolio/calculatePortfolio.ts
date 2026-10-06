@@ -30,7 +30,12 @@ export function calculatePortfolio(
       quote.previousClose > 0
         ? (quote.change / quote.previousClose) * 100
         : null;
+    const cost = validShares && holding.averageCost != null && holding.averageCost > 0
+      ? holding.shares * holding.averageCost : null;
+    const costBasis = finite(cost) ? cost : null;
     return {
+      ...calculateReturn(value, costBasis),
+      costBasis,
       holding,
       quote,
       marketValue: finite(value) ? value : null,
@@ -56,7 +61,11 @@ export function calculatePortfolio(
     previous !== null && previous > 0 && dailyPnL !== null
       ? (dailyPnL / previous) * 100
       : null;
+  const totalCost = rows.length ? sum(rows.map(row => row.costBasis)) : null;
+  const costBasis = finite(totalCost) ? totalCost : null;
   return {
+    ...calculateReturn(marketValue, costBasis),
+    costBasis,
     holdings: rows,
     marketValue,
     dailyPnL,
@@ -64,4 +73,11 @@ export function calculatePortfolio(
     tradingDate: dates.size === 1 ? [...dates][0]! : null,
     isComplete: marketValue !== null && dailyPnL !== null,
   };
+}
+
+export function calculateReturn(marketValue: number | null, costBasis: number | null) {
+  const pnl = finite(marketValue) && finite(costBasis) && costBasis > 0 ? marketValue - costBasis : null;
+  const unrealizedPnL = finite(pnl) ? pnl : null;
+  const percent = unrealizedPnL !== null && costBasis !== null ? unrealizedPnL / costBasis * 100 : null;
+  return { unrealizedPnL, returnPercentage: finite(percent) ? percent : null };
 }

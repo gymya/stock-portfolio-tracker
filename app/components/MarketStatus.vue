@@ -15,7 +15,7 @@ const { loading, error, quotes, refresh } = useStockQuotes();
       "
     />
     <UButton
-      class="mt-3"
+      class="mt-3 flex w-fit ml-auto"
       color="neutral"
       variant="outline"
       :loading="loading"

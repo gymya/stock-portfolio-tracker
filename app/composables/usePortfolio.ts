@@ -1,3 +1,4 @@
+import { addPurchase, validateCost } from "~/services/portfolio/purchase";
 import type { Holding } from "~/types/portfolio";
 import { createPortfolioLocal } from "~/repositories/portfolioLocal";
 import { calculatePortfolio } from "~/services/portfolio/calculatePortfolio";
@@ -30,32 +31,30 @@ export function usePortfolio() {
         "持股已在此頁更新，但無法儲存至瀏覽器。重新整理後，本次變更可能遺失；原有資料未被覆寫。";
     }
   }
-  async function add(symbolInput: string, shares: number) {
+  async function add(symbolInput: string, shares: number, averageCost: number) {
     const symbol = symbolInput.replace(/\s/g, "").toUpperCase();
     if (!/^[A-Z0-9]{4,10}$/.test(symbol))
       throw new Error("請輸入有效的股票代碼。");
     if (!Number.isFinite(shares) || shares <= 0)
       throw new Error("股數必須為大於 0 的數字。");
+    validateCost(shares, averageCost);
+    const original = holdings.value.find(h => h.symbol === symbol);
+    if (original?.averageCost === undefined && original)
+      throw new Error("請先在下方「修改持股」補上原有購買均價，再加碼。");
     await lookup(symbol);
     const existing = holdings.value.find((h) => h.symbol === symbol);
-    const total = (existing?.shares ?? 0) + shares;
-    if (!Number.isFinite(total))
-      throw new Error("合計股數過大，請調整輸入數量。");
-    await persist(
-      existing
-        ? holdings.value.map((h) =>
-            h.symbol === symbol ? { ...h, shares: total } : h,
-          )
-        : [...holdings.value, { symbol, shares }],
-    );
+    const next = addPurchase(symbol, existing, shares, averageCost);
+    await persist(existing
+      ? holdings.value.map(h => h.symbol === symbol ? next : h)
+      : [...holdings.value, next]);
   }
-  async function update(symbol: string, shares: number) {
+  async function update(symbol: string, shares: number, averageCost?: number) {
     if (!Number.isFinite(shares) || shares <= 0)
       throw new Error("股數必須為大於 0 的數字。");
-    await persist(
-      holdings.value.map((h) => (h.symbol === symbol ? { ...h, shares } : h)),
-    );
+    if (averageCost !== undefined) validateCost(shares, averageCost);
+    await persist(holdings.value.map(h => h.symbol === symbol ? { ...h, shares, averageCost } : h));
   }
+
   async function remove(symbol: string) {
     await persist(holdings.value.filter((h) => h.symbol !== symbol));
   }

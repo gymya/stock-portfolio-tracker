@@ -1,3 +1,4 @@
+import { calculateReturn } from "./calculatePortfolio.ts"
 import type { PortfolioSummary } from '../../types/portfolio.ts'
 
 // TWSE ETF codes and tax rules; unknown instruments stay unestimated.
@@ -18,13 +19,13 @@ export function deductSellingFees(summary: PortfolioSummary, date: string): Port
     const dailyPnL = row.dailyPnL !== null && fees !== null ? row.dailyPnL - fees : null
     const previous = value !== null && row.dailyPnL !== null ? value - row.dailyPnL : null
     const dailyChangePercentage = dailyPnL !== null && previous !== null && previous > 0 ? dailyPnL / previous * 100 : null
-    return { ...row, marketValue, dailyPnL, dailyChangePercentage }
+    return { ...row, ...calculateReturn(marketValue, row.costBasis), marketValue, dailyPnL, dailyChangePercentage }
   })
   const sum = (key: 'marketValue' | 'dailyPnL') => summary[key] !== null && holdings.every(row => row[key] !== null)
     ? holdings.reduce((total, row) => total + row[key]!, 0) : null
   const marketValue = sum('marketValue'), dailyPnL = sum('dailyPnL')
   const previous = summary.marketValue !== null && summary.dailyPnL !== null ? summary.marketValue - summary.dailyPnL : null
-  return { ...summary, holdings, marketValue, dailyPnL,
+  return { ...summary, ...calculateReturn(marketValue, summary.costBasis), holdings, marketValue, dailyPnL,
     dailyChangePercentage: dailyPnL !== null && previous !== null && previous > 0 ? dailyPnL / previous * 100 : null,
     isComplete: marketValue !== null && dailyPnL !== null }
 }

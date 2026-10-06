@@ -9,9 +9,8 @@ const names = computed(
   <section>
     <div class="page-heading">
       <div>
-        <p class="eyebrow">持股設定</p>
         <h1>管理持股</h1>
-        <p class="subtitle">整理你的持股，讓投資組合保持最新。</p>
+        <p class="subtitle">新增買入紀錄，或調整目前的股數與均價。</p>
       </div>
       <UButton to="/portfolio" color="neutral" variant="outline"
         >查看投資組合</UButton
@@ -23,7 +22,7 @@ const names = computed(
         <h2>
           我的持股 <span class="count">{{ holdings.length }}</span>
         </h2>
-        <span class="subtle">股數變更後自動儲存</span>
+        <span class="subtle">股數與均價儲存在此瀏覽器</span>
       </div>
       <div v-if="!holdings.length" class="empty-state compact">
         <h3>尚未加入持股</h3>

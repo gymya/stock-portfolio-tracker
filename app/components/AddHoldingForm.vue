@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { searchStocks, type StockEntry } from "~/services/stock/catalog";
-const { add } = usePortfolio();
+const { add, holdings } = usePortfolio();
 const { loading } = useStockQuotes();
 const {
   stocks,
@@ -9,6 +9,7 @@ const {
   load,
 } = useStockCatalog();
 const symbol = ref(""),
+  averageCost = ref(""),
   shares = ref(""),
   lots = ref(""),
   error = ref(""),
@@ -79,11 +80,12 @@ async function submit() {
         throw new Error("請從搜尋結果選擇股票，或輸入完整股票代碼。");
       code = matches[0]!.symbol;
     }
-    await add(code, totalShares.value);
-    success.value = "已加入持股；相同股票的股數會累加。";
+    await add(code, totalShares.value, Number(averageCost.value));
+    success.value = "已加入持股，並依股數加權計算購買均價。";
     symbol.value = "";
     shares.value = "";
     lots.value = "";
+    averageCost.value = "";
   } catch (e) {
     error.value = e instanceof Error ? e.message : "新增失敗。";
   } finally {
@@ -178,6 +180,7 @@ async function submit() {
           class="w-full"
           aria-label="股數"
       /></UFormField>
+      <AverageCostInput v-model="averageCost" :symbol="symbol" label="本次買入均價（元／股）" required />
       <UButton
         type="submit"
         size="lg"
@@ -187,6 +190,8 @@ async function submit() {
         >新增持股</UButton
       >
     </form>
+    <p class="form-notice">同一檔股票再次新增即為加碼，請填本次股數與均價；原持股均價可在下方修改。</p>
+    <p v-if="holdings.some(h => h.symbol === symbol.trim().toUpperCase() && h.averageCost === undefined)" class="form-notice">這檔持股尚未設定均價，請先在下方「修改持股」補上，再加碼。</p>
     <p v-if="catalogWarning" role="status" class="form-notice">
       {{ catalogWarning }}
     </p>
