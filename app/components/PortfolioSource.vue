@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div class="px-5 py-5 space-y-4">
-      <p class="text-sm text-muted">{{ source === 'manual' ? '只計算此瀏覽器的手動持股；Google Sheets 資料不列入。' : '只計算試算表的買進股數減去賣出股數；手動持股不列入，行情仍由 Fugle 提供。' }}</p>
+      <p class="text-sm text-muted">{{ source === 'manual' ? '只計算此瀏覽器的手動持股；Google Sheets 資料不列入。' : '依試算表計算持股與成本；手動持股不列入，股價由 Fugle 提供。' }}</p>
       <template v-if="source === 'google'">
         <UAlert v-if="!configured" color="warning" variant="soft" :ui="{ title: 'text-highlighted', description: 'text-default' }" title="尚未設定 Google OAuth" description="請設定伺服器的 Google 用戶端 ID 與密鑰，並重新部署。" />
         <p v-if="checking" role="status">正在確認 Google 連線…</p>
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
         <details>
           <summary class="cursor-pointer py-3">試算表怎麼準備？</summary>
           <ul class="list-disc space-y-2 pl-5 text-sm text-muted">
-            <li>分頁用「交易紀錄」，前四欄為日期、股票代號、交易類型、股數。</li>
+            <li>分頁用「交易紀錄」，前五欄為交易日期、股票代號、交易類型、股數、成交單價（元）。</li>
             <li>交易填「買進」或「賣出」，數量以股計。</li>
             <li>期初持股填買進，日期可留白。</li>
           </ul>
