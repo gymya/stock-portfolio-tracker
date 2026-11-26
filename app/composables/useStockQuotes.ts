@@ -1,11 +1,10 @@
 import type { StockQuote } from "~/services/stock/types";
-import type { Holding } from "~/types/portfolio";
 import { fugleProvider } from "~/services/stock/fugle";
 const CACHE_MS = 60000;
 let pending: Promise<void> | null = null;
 export function useStockQuotes() {
   const quotes = useState<StockQuote[]>("quotes", () => []);
-  const holdings = useState<Holding[]>("holdings", () => []);
+  const { holdings } = usePortfolioSource();
   const loading = useState("quotes-loading", () => false);
   const error = useState<string | null>("quotes-error", () => null);
   const fetchedAt = useState<number | null>("quotes-fetched-at", () => null);

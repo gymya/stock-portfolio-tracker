@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { $pwa } = useNuxtApp();
+const { source } = usePortfolioSource();
 const offline = ref(false);
 function updateConnection() {
   offline.value = !navigator.onLine;
@@ -29,7 +30,7 @@ onBeforeUnmount(() => {
       color="warning"
       variant="soft"
       title="目前處於離線狀態"
-      description="仍可查看與修改已儲存持股。行情需連線取得；已載入的價格不會自動更新。"
+      :description="source === 'google' ? '離線時僅能查看本頁已同步持股；無法同步試算表或更新股價。重新整理後需連線重新同步。' : '仍可查看與修改已儲存持股。行情需連線取得；已載入的價格不會自動更新。'"
     />
     <UAlert
       v-if="$pwa?.registrationError"

@@ -9,7 +9,10 @@ import {
 } from "~/utils/format";
 import { deductSellingFees } from '~/services/portfolio/sellingFees';
 const { holdings, summary: originalSummary } = usePortfolio();
+const { source } = usePortfolioSource();
+const { account, checking, syncedAt, error: sheetError } = useGoogleSheets();
 const deductFees = ref(false);
+watch(source, () => { deductFees.value = false; });
 const summary = computed(() => deductFees.value
   ? deductSellingFees(originalSummary.value, new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10))
   : originalSummary.value);
@@ -35,18 +38,25 @@ const marketTime = computed(() => {
         >更新行情</UButton
       >
     </div>
+    <div v-if="source === 'google'" class="mb-6 space-y-3">
+      <p class="text-sm" role="status">持股來源：Google Sheets · {{ syncedAt ? `最後同步：${new Date(syncedAt).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}（臺北時間）` : '尚未同步' }}</p>
+      <p class="text-sm text-muted">「更新行情」只更新股價；試算表股數請至管理持股同步。</p>
+      <UAlert v-if="sheetError" color="warning" title="Google Sheets 提醒" :description="sheetError + (syncedAt ? ' 目前保留上次同步持股。' : '')" role="alert" />
+      <p v-if="checking" role="status">正在確認 Google 連線…</p>
+      <UButton v-if="!checking && (!syncedAt || sheetError)" to="/holdings" variant="outline">{{ account ? '前往管理持股同步' : '前往管理持股連接 Google' }}</UButton>
+    </div>
     <MarketStatus />
     <div class="market-caption">
       <span class="dot" :class="{ muted: !quotes.length || error }" />行情時間
       <strong>{{ marketTime ?? "尚未取得" }}</strong
       ><span class="caption-divider" />Fugle 成交行情
     </div>
-    <div class="fee-options">
+    <div v-if="source === 'manual'" class="fee-options">
       <UCheckbox v-model="deductFees" label="扣除預估稅費（假設全部賣出）" />
       <p class="mt-2 text-xs text-muted leading-relaxed">手續費 0.1425%（每檔最低 NT$20），證交稅依證券類型計算。僅供估算，以券商交割明細為準。</p>
       <p v-if="deductFees" class="mt-1 text-xs text-muted">損益扣除本次賣出稅費，不含買進費用。</p>
     </div>
-    <div class="summary-grid" aria-label="投資組合摘要">
+    <div v-if="source === 'manual' || syncedAt" class="summary-grid" :class="{ 'sheet-summary': source === 'google' }" aria-label="投資組合摘要">
       <div class="value-card">
         <p class="metric-label">{{ deductFees ? '預估賣出淨額' : '持股總市值' }}</p>
         <div class="portfolio-value">
@@ -68,14 +78,14 @@ const marketTime = computed(() => {
         >
         <p class="metric-note">相較前一交易日持股市值</p>
       </div>
-      <div class="change-card">
+      <div v-if="source === 'manual'" class="change-card">
         <p class="metric-label">{{ deductFees ? '扣費後持股報酬' : '持股報酬' }}</p>
         <p class="change-value" :class="direction(summary.unrealizedPnL)">{{ signedMoney(summary.unrealizedPnL, 0) }}</p>
         <span class="change-pill" :class="direction(summary.returnPercentage)">{{ percentage(summary.returnPercentage) }}</span>
         <p class="metric-note">總購買成本 NT$ {{ money(summary.costBasis, 0) }} · 依成本加權</p>
       </div>
     </div>
-    <UAlert v-if="holdings.some(h => h.averageCost === undefined)" class="mb-6" color="warning" variant="soft" title="部分持股尚未設定均價" description="請至管理持股補上購買均價；補齊前，缺少成本的個股及整體報酬率以「—」顯示。" />
+    <UAlert v-if="source === 'manual' && holdings.some(h => h.averageCost === undefined)" class="mb-6" color="warning" variant="soft" title="部分持股尚未設定均價" description="請至管理持股補上購買均價；補齊前，缺少成本的個股及整體報酬率以「—」顯示。" />
     <UAlert
       v-if="holdings.length && !summary.isComplete && !loading"
       class="mb-6"
@@ -92,9 +102,9 @@ const marketTime = computed(() => {
         <NuxtLink to="/holdings" class="text-link">管理持股</NuxtLink>
       </div>
       <div v-if="!holdings.length" class="empty-state">
-        <h3>從第一檔持股開始</h3>
-        <p>新增股票代碼與股數，查看你的投資組合市值。</p>
-        <UButton to="/holdings" size="lg">新增持股</UButton>
+        <h3>{{ source === 'manual' ? '從第一檔持股開始' : (syncedAt ? '已同步，目前沒有持股' : checking ? '正在確認連線' : account ? '尚未同步持股' : '尚未連接 Google Sheets') }}</h3>
+        <p>{{ source === 'manual' ? '新增股票代碼與股數，查看你的投資組合市值。' : (syncedAt ? '試算表的買進減去賣出後，沒有剩餘股數。' : '請前往管理持股連接並同步試算表。') }}</p>
+        <UButton v-if="source === 'manual'" to="/holdings" size="lg">新增持股</UButton>
       </div>
       <div v-else class="table-scroll">
         <table class="holdings-table">
@@ -103,13 +113,13 @@ const marketTime = computed(() => {
             <tr>
               <th>股票</th>
               <th class="numeric">持有股數</th>
-              <th class="numeric">購買均價</th>
+              <th v-if="source === 'manual'" class="numeric">購買均價</th>
               <th class="numeric">最近成交價</th>
               <th class="numeric">{{ deductFees ? '預估賣出淨額' : '市值' }}</th>
               <th class="numeric">{{ deductFees ? '扣費後損益' : '交易日損益' }}</th>
               <th class="numeric">{{ deductFees ? '扣費後損益 %' : '損益 %' }}</th>
-              <th class="numeric">{{ deductFees ? '扣費後未實現損益' : '未實現損益' }}</th>
-              <th class="numeric">{{ deductFees ? '扣費後報酬率' : '持股報酬率' }}</th>
+              <th v-if="source === 'manual'" class="numeric">{{ deductFees ? '扣費後未實現損益' : '未實現損益' }}</th>
+              <th v-if="source === 'manual'" class="numeric">{{ deductFees ? '扣費後報酬率' : '持股報酬率' }}</th>
             </tr>
           </thead>
           <tbody>
@@ -119,9 +129,9 @@ const marketTime = computed(() => {
                 ><small>{{ row.holding.symbol }} </small>
               </td>
               <td class="numeric" data-label="持有股數">
-                {{ money(row.holding.shares) }}<span class="unit"> 股</span>
+                {{ money(row.holding.shares, 6) }}<span class="unit"> 股</span>
               </td>
-              <td class="numeric" data-label="購買均價">{{ averagePrice(row.holding.averageCost) }}</td>
+              <td v-if="source === 'manual'" class="numeric" data-label="購買均價">{{ averagePrice(row.holding.averageCost) }}</td>
               <td class="numeric" data-label="最近成交價">
                 {{
                   row.quote?.close == null
@@ -142,17 +152,22 @@ const marketTime = computed(() => {
               <td class="numeric" data-label="交易日損益 %" :class="direction(row.dailyChangePercentage)">
                 {{ percentage(row.dailyChangePercentage) }}
               </td>
-              <td class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL, 0) }}</td>
-              <td class="numeric" :data-label="deductFees ? '扣費後報酬率' : '持股報酬率'" :class="direction(row.returnPercentage)">{{ percentage(row.returnPercentage) }}</td>
+              <td v-if="source === 'manual'" class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL, 0) }}</td>
+              <td v-if="source === 'manual'" class="numeric" :data-label="deductFees ? '扣費後報酬率' : '持股報酬率'" :class="direction(row.returnPercentage)">{{ percentage(row.returnPercentage) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
     <div class="info-note">
-      <p>
+      <p v-if="source === 'google'">試算表只提供剩餘股數；交易日損益以目前股數乘以最近成交價與前一交易日收盤價的差額，並非當日實際交易損益。不讀取成本、手續費或表內損益。</p>
+      <p v-else>
         交易日損益比較最近成交價與前一交易日收盤價。持股報酬率 =（市值 − 購買成本）÷ 購買成本；整體以總損益除以總成本，不含股息、已實現損益與買進手續費。勾選扣費時，另扣預估賣出稅費。
       </p>
     </div>
   </section>
 </template>
+
+<style scoped>
+@media (min-width: 641px) { .sheet-summary { grid-template-columns: 1.15fr 1fr; } }
+</style>
