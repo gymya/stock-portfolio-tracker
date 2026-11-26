@@ -4,7 +4,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     fugleApiBaseUrl: "", // NUXT_FUGLE_API_BASE_URL, server-only
     fugleApiKey: "", // NUXT_FUGLE_API_KEY, never exposed to the browser
+    googleClientId: "",
+    googleClientSecret: "",
+    googleRedirectUri: "https://stock-portfolio-tracker-bay.vercel.app/api/auth/google/callback",
   },
+  $development: { runtimeConfig: { googleRedirectUri: "http://localhost:3000/api/auth/google/callback" } },
   colorMode: { preference: "light" },
   modules: ["@nuxt/ui", "@vite-pwa/nuxt"],
   pwa: {
@@ -44,7 +48,7 @@ export default defineNuxtConfig({
       additionalManifestEntries: [{ url: "/", revision: String(Date.now()) }],
       cleanupOutdatedCaches: true,
       runtimeCaching: [
-        { urlPattern: /\/api\/quotes(?:\?.*)?$/, handler: "NetworkOnly" },
+        { urlPattern: /\/api\//, handler: "NetworkOnly" },
       ],
     },
   },

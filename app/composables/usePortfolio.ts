@@ -4,7 +4,7 @@ import { createPortfolioLocal } from "~/repositories/portfolioLocal";
 import { calculatePortfolio } from "~/services/portfolio/calculatePortfolio";
 const repository = createPortfolioLocal(() => window.localStorage);
 export function usePortfolio() {
-  const holdings = useState<Holding[]>("holdings", () => []);
+  const { holdings, manualHoldings, source } = usePortfolioSource();
   const initialized = useState("portfolio-initialized", () => false);
   const storageError = useState<string | null>("storage-error", () => null);
   const { quotes, lookup } = useStockQuotes();
@@ -15,14 +15,15 @@ export function usePortfolio() {
     if (initialized.value) return;
     initialized.value = true;
     try {
-      holdings.value = await repository.load();
+      manualHoldings.value = await repository.load();
     } catch {
       storageError.value =
         "無法讀取瀏覽器持股資料（可能已損毀或禁止存取）。原有資料不會被覆寫；本次變更僅保留在此頁，重新整理後會消失。";
     }
   }
   async function persist(next: Holding[]) {
-    holdings.value = next;
+    if (source.value !== "manual") throw new Error("請切換至手動持股模式再編輯。");
+    manualHoldings.value = next;
     try {
       await repository.save(next);
       storageError.value = null;
@@ -38,25 +39,25 @@ export function usePortfolio() {
     if (!Number.isFinite(shares) || shares <= 0)
       throw new Error("股數必須為大於 0 的數字。");
     validateCost(shares, averageCost);
-    const original = holdings.value.find(h => h.symbol === symbol);
+    const original = manualHoldings.value.find(h => h.symbol === symbol);
     if (original?.averageCost === undefined && original)
       throw new Error("請先在下方「修改持股」補上原有購買均價，再加碼。");
     await lookup(symbol);
-    const existing = holdings.value.find((h) => h.symbol === symbol);
+    const existing = manualHoldings.value.find((h) => h.symbol === symbol);
     const next = addPurchase(symbol, existing, shares, averageCost);
     await persist(existing
-      ? holdings.value.map(h => h.symbol === symbol ? next : h)
-      : [...holdings.value, next]);
+      ? manualHoldings.value.map(h => h.symbol === symbol ? next : h)
+      : [...manualHoldings.value, next]);
   }
   async function update(symbol: string, shares: number, averageCost?: number) {
     if (!Number.isFinite(shares) || shares <= 0)
       throw new Error("股數必須為大於 0 的數字。");
     if (averageCost !== undefined) validateCost(shares, averageCost);
-    await persist(holdings.value.map(h => h.symbol === symbol ? { ...h, shares, averageCost } : h));
+    await persist(manualHoldings.value.map(h => h.symbol === symbol ? { ...h, shares, averageCost } : h));
   }
 
   async function remove(symbol: string) {
-    await persist(holdings.value.filter((h) => h.symbol !== symbol));
+    await persist(manualHoldings.value.filter((h) => h.symbol !== symbol));
   }
   return {
     holdings,

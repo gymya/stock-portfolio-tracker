@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { initialize, storageError, holdings, initialized } = usePortfolio();
 const { refresh } = useStockQuotes();
+const { source } = usePortfolioSource();
 watch(
   () =>
     holdings.value
@@ -35,7 +36,7 @@ onMounted(async () => {
           <NuxtLink to="/portfolio">投資組合</NuxtLink
           ><NuxtLink to="/holdings">管理持股</NuxtLink>
         </nav>
-        <span class="local-label"><span class="dot" /> 本機儲存</span>
+        <span class="local-label"><span class="dot" /> {{ source === 'manual' ? '本機儲存' : 'Google Sheets' }}</span>
       </header>
       <main id="main-content" tabindex="-1">
         <UAlert
@@ -47,6 +48,7 @@ onMounted(async () => {
           class="mb-6"
         />
         <PwaStatus />
+        <PortfolioSource />
         <NuxtPage />
       </main>
       <footer><span>資料來源：Fugle</span></footer>
