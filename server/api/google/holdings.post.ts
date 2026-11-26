@@ -13,7 +13,7 @@ export default defineEventHandler(async event => {
   }
   let values: unknown;
   try {
-    const range = "'交易紀錄'!A1:D10022";
+    const range = "'交易紀錄'!A1:E10022";
     const result = await $fetch<{ values?: unknown }>(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`, {
       headers: { Authorization: `Bearer ${session.data.accessToken}` },
       query: { valueRenderOption: "FORMATTED_VALUE" }, timeout: 15000, retry: 0,

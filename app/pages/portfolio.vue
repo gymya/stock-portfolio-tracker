@@ -56,7 +56,7 @@ const marketTime = computed(() => {
       <p class="mt-2 text-xs text-muted leading-relaxed">手續費 0.1425%（每檔最低 NT$20），證交稅依證券類型計算。僅供估算，以券商交割明細為準。</p>
       <p v-if="deductFees" class="mt-1 text-xs text-muted">損益扣除本次賣出稅費，不含買進費用。</p>
     </div>
-    <div v-if="source === 'manual' || syncedAt" class="summary-grid" :class="{ 'sheet-summary': source === 'google' }" aria-label="投資組合摘要">
+    <div v-if="source === 'manual' || syncedAt" class="summary-grid" aria-label="投資組合摘要">
       <div class="value-card">
         <p class="metric-label">{{ deductFees ? '預估賣出淨額' : '持股總市值' }}</p>
         <div class="portfolio-value">
@@ -78,14 +78,14 @@ const marketTime = computed(() => {
         >
         <p class="metric-note">相較前一交易日持股市值</p>
       </div>
-      <div v-if="source === 'manual'" class="change-card">
-        <p class="metric-label">{{ deductFees ? '扣費後持股報酬' : '持股報酬' }}</p>
+      <div class="change-card">
+        <p class="metric-label">{{ deductFees ? '扣費後持股總報酬' : '持股總報酬' }}</p>
         <p class="change-value" :class="direction(summary.unrealizedPnL)">{{ signedMoney(summary.unrealizedPnL, 0) }}</p>
         <span class="change-pill" :class="direction(summary.returnPercentage)">{{ percentage(summary.returnPercentage) }}</span>
-        <p class="metric-note">總購買成本 NT$ {{ money(summary.costBasis, 0) }} · 依成本加權</p>
+        <p class="metric-note">剩餘持股成本 NT$ {{ money(summary.costBasis, 0) }} · 依成本加權</p>
       </div>
     </div>
-    <UAlert v-if="source === 'manual' && holdings.some(h => h.averageCost === undefined)" class="mb-6" color="warning" variant="soft" title="部分持股尚未設定均價" description="請至管理持股補上購買均價；補齊前，缺少成本的個股及整體報酬率以「—」顯示。" />
+    <UAlert v-if="holdings.some(h => h.averageCost === undefined)" class="mb-6" color="warning" variant="soft" title="部分持股尚未設定均價" :description="source === 'google' ? '請至管理持股重新同步成交單價；補齊前報酬以「—」顯示。' : '請至管理持股補上購買均價；補齊前，缺少成本的個股及整體報酬率以「—」顯示。'" />
     <UAlert
       v-if="holdings.length && !summary.isComplete && !loading"
       class="mb-6"
@@ -113,13 +113,13 @@ const marketTime = computed(() => {
             <tr>
               <th>股票</th>
               <th class="numeric">持有股數</th>
-              <th v-if="source === 'manual'" class="numeric">購買均價</th>
+              <th class="numeric">購買均價</th>
               <th class="numeric">最近成交價</th>
               <th class="numeric">{{ deductFees ? '預估賣出淨額' : '市值' }}</th>
               <th class="numeric">{{ deductFees ? '扣費後損益' : '交易日損益' }}</th>
               <th class="numeric">{{ deductFees ? '扣費後損益 %' : '損益 %' }}</th>
-              <th v-if="source === 'manual'" class="numeric">{{ deductFees ? '扣費後未實現損益' : '未實現損益' }}</th>
-              <th v-if="source === 'manual'" class="numeric">{{ deductFees ? '扣費後報酬率' : '持股報酬率' }}</th>
+              <th class="numeric">{{ deductFees ? '扣費後未實現損益' : '未實現損益' }}</th>
+              <th class="numeric">{{ deductFees ? '扣費後報酬率' : '持股報酬率' }}</th>
             </tr>
           </thead>
           <tbody>
@@ -131,7 +131,7 @@ const marketTime = computed(() => {
               <td class="numeric" data-label="持有股數">
                 {{ money(row.holding.shares, 6) }}<span class="unit"> 股</span>
               </td>
-              <td v-if="source === 'manual'" class="numeric" data-label="購買均價">{{ averagePrice(row.holding.averageCost) }}</td>
+              <td class="numeric" data-label="購買均價">{{ averagePrice(row.holding.averageCost) }}</td>
               <td class="numeric" data-label="最近成交價">
                 {{
                   row.quote?.close == null
@@ -152,22 +152,18 @@ const marketTime = computed(() => {
               <td class="numeric" data-label="交易日損益 %" :class="direction(row.dailyChangePercentage)">
                 {{ percentage(row.dailyChangePercentage) }}
               </td>
-              <td v-if="source === 'manual'" class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL, 0) }}</td>
-              <td v-if="source === 'manual'" class="numeric" :data-label="deductFees ? '扣費後報酬率' : '持股報酬率'" :class="direction(row.returnPercentage)">{{ percentage(row.returnPercentage) }}</td>
+              <td class="numeric" :data-label="deductFees ? '扣費後未實現損益' : '未實現損益'" :class="direction(row.unrealizedPnL)">{{ signedMoney(row.unrealizedPnL, 0) }}</td>
+              <td class="numeric" :data-label="deductFees ? '扣費後報酬率' : '持股報酬率'" :class="direction(row.returnPercentage)">{{ percentage(row.returnPercentage) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
     <div class="info-note">
-      <p v-if="source === 'google'">試算表只提供剩餘股數；交易日損益以目前股數乘以最近成交價與前一交易日收盤價的差額，並非當日實際交易損益。不讀取成本、手續費或表內損益。</p>
+      <p v-if="source === 'google'">持股總報酬為目前市值減去剩餘持股成本，報酬率以總成本計算；不含已實現損益、股息與手續費。成本按日期排序採移動加權平均；同日依表格列順序，空白日期的期初買進先計入。交易日損益僅反映目前持股的股價變動。</p>
       <p v-else>
         交易日損益比較最近成交價與前一交易日收盤價。持股報酬率 =（市值 − 購買成本）÷ 購買成本；整體以總損益除以總成本，不含股息、已實現損益與買進手續費。勾選扣費時，另扣預估賣出稅費。
       </p>
     </div>
   </section>
 </template>
-
-<style scoped>
-@media (min-width: 641px) { .sheet-summary { grid-template-columns: 1.15fr 1fr; } }
-</style>

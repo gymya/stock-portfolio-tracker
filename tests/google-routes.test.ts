@@ -20,9 +20,9 @@ test("Google OAuth binds state and PKCE, isolates users, rejects CSRF and hides 
       const token = options.headers?.Authorization;
       if (url.includes("/userinfo")) return { sub: token!.slice(-1), email: `${token!.slice(-1)}@example.test` };
       assert.ok(url.startsWith("https://sheets.googleapis.com/v4/spreadsheets/"));
-      assert.ok(decodeURIComponent(new URL(url).pathname).endsWith("'交易紀錄'!A1:D10022"));
+      assert.ok(decodeURIComponent(new URL(url).pathname).endsWith("'交易紀錄'!A1:E10022"));
       if (upstreamError) throw Object.assign(new Error("private upstream detail"), { statusCode: upstreamError, data: { error: { message: upstreamMessage } } });
-      return { values: [["交易日期", "股票代號", "交易類型", "股數"], ["2026/11/20", "0050", "買進", token?.endsWith("A") ? 10 : 20]] };
+      return { values: [["交易日期", "股票代號", "交易類型", "股數", "成交單價（元）"], ["2026/11/20", "0050", "買進", token?.endsWith("A") ? 10 : 20, 100]] };
     },
   });
   const routes = await Promise.all([
@@ -78,7 +78,7 @@ test("Google OAuth binds state and PKCE, isolates users, rejects CSRF and hides 
     const response = await client("/holdings", input);
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
-    assert.deepEqual((await response.json()).holdings, [{ symbol: "0050", shares }]);
+    assert.deepEqual((await response.json()).holdings, [{ symbol: "0050", shares, averageCost: 100 }]);
   }
   assert.equal((await a("/holdings", { ...input, spreadsheet: "https://evil.example" })).status, 400);
   upstreamError = 400;
